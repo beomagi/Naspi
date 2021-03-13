@@ -1,15 +1,20 @@
-sudo deluser --remove-home guest
-sudo deluser --remove-home general
-sudo groupdel smbgroup
-
+# remove users and groups if they already exist
+sudo deluser --remove-home guest > /dev/null 2>&1
+sudo deluser --remove-home general > /dev/null 2>&1
+sudo groupdel smbgroup > /dev/null 2>&1
+# create users and group. 
 sudo addgroup smbgroup
-sudo useradd -G smbgroup -p $(openssl passwd -1 guest) guest
-sudo chage -I -1 -m 0 -M 99999 -E -1 guest
-sudo useradd -G smbgroup -p $(openssl passwd -1 general) general
-sudo chage -I -1 -m 0 -M 99999 -E -1 general
 
-sudo bash -c "(echo 'guest'; echo 'guest') | smbpasswd -a guest -s"
-sudo bash -c "(echo 'general'; echo 'general') | smbpasswd -a general -s"
+fnuseradd () {
+  username=$1
+  sudo useradd -G smbgroup -p $(openssl passwd -1 ${username}) ${username}
+  sudo chage -I -1 -m 0 -M 99999 -E -1 ${username}
+  echo -e "${username}\n${username}" | smbpasswd -a ${username} -s
+}
+
+fnuseradd guest
+fnuseradd general
+
 
 cd ~
 mkdir shares
@@ -25,11 +30,12 @@ sudo bash -c 'grep "\[major\]" /etc/samba/smb.conf || echo "
 [major]
    comment = Library
    path = /home/pi/shares/major
-   valid users = guest
    public = no
    browsable = yes
    read only = yes
-   writable = no
+   writeable = no
+   valid users = guest general
+   write list = general
 
 " >> /etc/samba/smb.conf'
 

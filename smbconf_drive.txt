@@ -1,0 +1,9 @@
+[major]
+   comment = Library
+   path = /home/pi/shares/major
+   public = no
+   browsable = yes
+   read only = yes
+   writeable = no
+   valid users = guest general
+   write list = general
